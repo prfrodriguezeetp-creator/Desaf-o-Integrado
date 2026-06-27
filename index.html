@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Simulador Educativo - 3 Niveles</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --danger: #e53935;
+            --success: #0f9d58;
+            --warning: #f9a825;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #202124;
+            --border: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --btn-radius: 12px;
+            --font: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --transition: 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Contenedor principal Mobile-First */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        /* Header con temporizador global */
+        .timer-bar {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--border);
+        }
+        .timer-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #5f6368;
+            letter-spacing: 0.3px;
+        }
+        .timer-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: var(--primary);
+            transition: color var(--transition);
+        }
+        .timer-value.warning {
+            color: var(--warning);
+            animation: pulse 1s infinite;
+        }
+        .timer-value.danger {
+            color: var(--danger);
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Pantallas (ocultas por defecto) */
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--border);
+            animation: fadeSlideIn 0.3s ease;
+        }
+        .screen.active {
+            display: flex;
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Títulos y textos */
+        .screen-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .screen-subtitle {
+            font-size: 0.95rem;
+            color: #5f6368;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .message {
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        .message.error {
+            background: #fce8e6;
+            color: #c5221f;
+            display: block;
+        }
+        .message.success {
+            background: #e6f4ea;
+            color: #137333;
+            display: block;
+        }
+        .message.info {
+            background: #e8f0fe;
+            color: #1967d2;
+            display: block;
+        }
+
+        /* Inputs y botones */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .input-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #3c4043;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--btn-radius);
+            outline: none;
+            transition: border var(--transition);
+            font-family: var(--font);
+            background: #fafafa;
+        }
+        input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            text-align: center;
+            transition: all var(--transition);
+            letter-spacing: 0.4px;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            min-height: 56px;
+            background: #e0e0e0;
+            color: #3c4043;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .btn:active {
+            transform: scale(0.97);
+            opacity: 0.85;
+        }
+        .btn:disabled {
+            background: #e0e0e0 !important;
+            color: #9aa0a6 !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-outline {
+            background: #fff;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-generate {
+            background: #bdbdbd;
+            color: #fff;
+            transition: background 0.4s ease;
+        }
+        .btn-generate.ready {
+            background: #0f9d58;
+            box-shadow: 0 4px 14px rgba(15, 157, 88, 0.35);
+            animation: glowGreen 1.8s infinite;
+        }
+        @keyframes glowGreen {
+            0%,
+            100% {
+                box-shadow: 0 4px 14px rgba(15, 157, 88, 0.35);
+            }
+            50% {
+                box-shadow: 0 6px 24px rgba(15, 157, 88, 0.65);
+            }
+        }
+
+        /* Lista de gastos (Nivel 2) */
+        .expense-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 0;
+        }
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f3f4;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            gap: 8px;
+        }
+        .expense-item .desc {
+            flex: 1;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .expense-item .amount {
+            font-weight: 700;
+            color: var(--danger);
+            margin-right: 4px;
+        }
+        .expense-item .btn-delete {
+            background: transparent;
+            border: none;
+            font-size: 1.3rem;
+            color: #9aa0a6;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: all var(--transition);
+            line-height: 1;
+        }
+        .expense-item .btn-delete:active {
+            background: #e0e0e0;
+            color: var(--danger);
+        }
+        .total-display {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: right;
+            padding: 8px 0;
+            color: var(--text);
+        }
+        .total-display span {
+            color: var(--primary);
+        }
+
+        /* Círculo de reflejos (Nivel 3) */
+        .reflex-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .reflex-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: #e53935;
+            /* rojo = esperando */;
+            transition: background 0.1s ease;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(229, 57, 53, 0.4);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .reflex-circle.green {
+            background: #0f9d58;
+            box-shadow: 0 8px 24px rgba(15, 157, 88, 0.5);
+        }
+        .reflex-circle.waiting {
+            background: #f9a825;
+            box-shadow: 0 8px 24px rgba(249, 168, 37, 0.5);
+        }
+        .reflex-instruction {
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+            color: #5f6368;
+            min-height: 3em;
+        }
+
+        /* Informe Final */
+        .report-box {
+            background: #f1f3f4;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px dashed #9aa0a6;
+            color: #202124;
+        }
+        .report-box.visible {
+            display: block;
+        }
+
+        /* Pantalla tiempo agotado */
+        .timeout-overlay {
+            text-align: center;
+        }
+        .timeout-icon {
+            font-size: 4rem;
+            margin-bottom: 8px;
+        }
+
+        /* Responsive mínimos */
+        @media (max-width: 360px) {
+            .timer-value {
+                font-size: 1.8rem;
+            }
+            .btn {
+                padding: 14px 16px;
+                font-size: 1rem;
+                min-height: 48px;
+            }
+            .reflex-circle {
+                width: 110px;
+                height: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Barra de temporizador global, visible siempre excepto en timeout -->
+        <div class="timer-bar" id="timerBar">
+            <span class="timer-label">⏱️ Tiempo restante</span>
+            <span class="timer-value" id="timerDisplay">60</span>
+        </div>
+
+        <!-- Nivel 1: Login -->
+        <div class="screen active" id="screen-level1">
+            <h2 class="screen-title">🔐 Nivel 1 · Login</h2>
+            <p class="screen-subtitle">Ingresa las credenciales de administrador</p>
+            <div class="input-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" placeholder="admin" autocomplete="off" autocorrect="off" autocapitalize="none">
+            </div>
+            <div class="input-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" placeholder="····">
+            </div>
+            <div class="message" id="msg-level1"></div>
+            <button class="btn btn-primary" id="btn-login">Verificar credenciales</button>
+        </div>
+
+        <!-- Nivel 2: Presupuesto -->
+        <div class="screen" id="screen-level2">
+            <h2 class="screen-title">💰 Nivel 2 · Presupuesto</h2>
+            <p class="screen-subtitle">Agrega gastos (máx. 3) con total entre <strong>$3,000 y $3,500</strong></p>
+            <div class="input-group">
+                <label for="expenseDesc">Concepto</label>
+                <input type="text" id="expenseDesc" placeholder="Ej: Materiales" maxlength="30">
+            </div>
+            <div class="input-group">
+                <label for="expenseAmount">Monto ($)</label>
+                <input type="number" id="expenseAmount" placeholder="0" min="1" step="1">
+            </div>
+            <button class="btn btn-outline" id="btn-add-expense">➕ Agregar gasto</button>
+            <div class="message" id="msg-level2"></div>
+            <ul class="expense-list" id="expenseList"></ul>
+            <div class="total-display">Total: <span id="totalDisplay">$0</span> / hasta 3 items</div>
+            <button class="btn btn-success" id="btn-next-level2" disabled>Siguiente nivel →</button>
+        </div>
+
+        <!-- Nivel 3: Reflejos -->
+        <div class="screen" id="screen-level3">
+            <h2 class="screen-title">⚡ Nivel 3 · Reflejos</h2>
+            <p class="screen-subtitle">Toca el círculo <strong>inmediatamente</strong> cuando se ponga <span style="color:#0f9d58;">VERDE</span></p>
+            <div class="reflex-area">
+                <div class="reflex-circle" id="reflexCircle"></div>
+                <p class="reflex-instruction" id="reflexInstruction">Espera el cambio de color... (no toques antes)</p>
+                <div class="message" id="msg-level3"></div>
+            </div>
+            <button class="btn btn-primary" id="btn-retry-reflex" style="display:none;">🔄 Reintentar</button>
+        </div>
+
+        <!-- Pantalla Informe Final -->
+        <div class="screen" id="screen-report">
+            <h2 class="screen-title">📋 Informe Final</h2>
+            <p class="screen-subtitle">Revisa tu desempeño en los 3 niveles</p>
+            <button class="btn btn-generate" id="btn-generate-report" disabled>📄 Generar Informe</button>
+            <div class="report-box" id="reportContent"></div>
+            <button class="btn btn-outline" id="btn-copy-report" style="display:none;">📋 Copiar Informe al portapapeles</button>
+            <div class="message" id="msg-report"></div>
+            <button class="btn btn-danger" id="btn-restart-from-report">🔄 Reiniciar simulador</button>
+        </div>
+
+        <!-- Pantalla Tiempo Agotado -->
+        <div class="screen timeout-overlay" id="screen-timeout">
+            <div class="timeout-icon">⏰</div>
+            <h2 class="screen-title">¡Tiempo agotado!</h2>
+            <p class="screen-subtitle">No lograste completar los 3 niveles en 60 segundos.</p>
+            <button class="btn btn-danger" id="btn-restart-timeout">🔄 Intentar de nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== VARIABLES GLOBALES DE ESTADO ==========
+            // Estas variables controlan todo el flujo del simulador.
+            // timeLeft: temporizador global que corre desde el inicio (60 segundos).
+            // timerInterval: referencia al setInterval para poder detenerlo.
+            // currentLevel: indica en qué pantalla estamos (1, 2, 3, 'report', 'timeout').
+            // level1Passed, level2Passed, level3Passed: booleanas que registran si se superó cada nivel.
+            // expenses: arreglo de objetos {desc, amount} para el nivel 2.
+            // reflexState: controla la máquina de estados del nivel 3 ('idle','waiting','green','success','failed').
+
+            let timeLeft = 60;
+            let timerInterval = null;
+            let gameActive = true; // se pone false cuando el tiempo se agota
+            let currentScreen = 'level1';
+
+            // Banderas booleanas de superación de niveles
+            let level1Passed = false;
+            let level2Passed = false;
+            let level3Passed = false;
+
+            // Datos del nivel 2
+            let expenses = [];
+            const MAX_EXPENSES = 3;
+            const BUDGET_MIN = 3000;
+            const BUDGET_MAX = 3500;
+
+            // Estado del nivel 3
+            let reflexState = 'idle'; // idle | waiting | green | success | failed
+            let reflexTimeout = null;
+            let greenTimestamp = null;
+            const REFLEX_MAX_MS = 500; // milisegundos para tocar desde que se pone verde
+
+            // ========== REFERENCIAS AL DOM ==========
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerBar = document.getElementById('timerBar');
+
+            // Pantallas
+            const screenLevel1 = document.getElementById('screen-level1');
+            const screenLevel2 = document.getElementById('screen-level2');
+            const screenLevel3 = document.getElementById('screen-level3');
+            const screenReport = document.getElementById('screen-report');
+            const screenTimeout = document.getElementById('screen-timeout');
+
+            // Botones y elementos nivel 1
+            const btnLogin = document.getElementById('btn-login');
+            const msgLevel1 = document.getElementById('msg-level1');
+            const inputUser = document.getElementById('username');
+            const inputPass = document.getElementById('password');
+
+            // Nivel 2
+            const btnAddExpense = document.getElementById('btn-add-expense');
+            const btnNextLevel2 = document.getElementById('btn-next-level2');
+            const msgLevel2 = document.getElementById('msg-level2');
+            const expenseList = document.getElementById('expenseList');
+            const totalDisplay = document.getElementById('totalDisplay');
+            const inputDesc = document.getElementById('expenseDesc');
+            const inputAmount = document.getElementById('expenseAmount');
+
+            // Nivel 3
+            const reflexCircle = document.getElementById('reflexCircle');
+            const reflexInstruction = document.getElementById('reflexInstruction');
+            const msgLevel3 = document.getElementById('msg-level3');
+            const btnRetryReflex = document.getElementById('btn-retry-reflex');
+
+            // Informe
+            const btnGenerateReport = document.getElementById('btn-generate-report');
+            const reportContent = document.getElementById('reportContent');
+            const btnCopyReport = document.getElementById('btn-copy-report');
+            const msgReport = document.getElementById('msg-report');
+            const btnRestartFromReport = document.getElementById('btn-restart-from-report');
+            const btnRestartTimeout = document.getElementById('btn-restart-timeout');
+
+            // ========== FUNCIONES DE TRANSICIÓN DE PANTALLAS ==========
+            /**
+             * Muestra una pantalla específica ocultando todas las demás.
+             * Esta es la base para cambiar de nivel sin recargar la página.
+             * @param {string} screenId - Identificador: 'level1','level2','level3','report','timeout'
+             */
+            function showScreen(screenId) {
+                // Ocultar todas las pantallas
+                [screenLevel1, screenLevel2, screenLevel3, screenReport, screenTimeout].forEach(s => s
+                    .classList.remove('active'));
+
+                // Mostrar la solicitada
+                switch (screenId) {
+                    case 'level1':
+                        screenLevel1.classList.add('active');
+                        break;
+                    case 'level2':
+                        screenLevel2.classList.add('active');
+                        break;
+                    case 'level3':
+                        screenLevel3.classList.add('active');
+                        break;
+                    case 'report':
+                        screenReport.classList.add('active');
+                        break;
+                    case 'timeout':
+                        screenTimeout.classList.add('active');
+                        timerBar.style.display = 'none'; // ocultar barra de tiempo en timeout
+                        break;
+                }
+                currentScreen = screenId;
+                if (screenId !== 'timeout') {
+                    timerBar.style.display = 'flex';
+                }
+            }
+
+            // ========== TEMPORIZADOR GLOBAL ==========
+            /**
+             * Inicia el temporizador de 60 segundos.
+             * Es la variable global timeLeft que se decrementa cada segundo.
+             * Si llega a 0, se detiene el juego y se muestra pantalla de tiempo agotado.
+             */
+            function startTimer() {
+                if (timerInterval) clearInterval(timerInterval);
+                timeLeft = 60;
+                gameActive = true;
+                updateTimerDisplay();
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        timeLeft = 0;
+                        updateTimerDisplay();
+                        endGameTimeOut();
+                    }
+                }, 1000);
+            }
+
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+
+            function updateTimerDisplay() {
+                timerDisplay.textContent = timeLeft;
+                // Cambios visuales según urgencia
+                timerDisplay.classList.remove('warning', 'danger');
+                if (timeLeft <= 10 && timeLeft > 5) {
+                    timerDisplay.classList.add('warning');
+                } else if (timeLeft <= 5) {
+                    timerDisplay.classList.add('danger');
+                }
+            }
+
+            /**
+             * Se ejecuta cuando el temporizador llega a 0.
+             * Detiene todo y fuerza la pantalla de timeout.
+             */
+            function endGameTimeOut() {
+                stopTimer();
+                gameActive = false;
+                // Detener cualquier actividad del nivel 3
+                if (reflexTimeout) clearTimeout(reflexTimeout);
+                reflexState = 'idle';
+                showScreen('timeout');
+            }
+
+            // ========== REINICIO COMPLETO ==========
+            function restartGame() {
+                stopTimer();
+                // Reiniciar variables globales
+                timeLeft = 60;
+                gameActive = true;
+                level1Passed = false;
+                level2Passed = false;
+                level3Passed = false;
+                expenses = [];
+                reflexState = 'idle';
+                if (reflexTimeout) clearTimeout(reflexTimeout);
+                greenTimestamp = null;
+
+                // Limpiar mensajes y campos
+                msgLevel1.textContent = '';
+                msgLevel1.className = 'message';
+                msgLevel2.textContent = '';
+                msgLevel2.className = 'message';
+                msgLevel3.textContent = '';
+                msgLevel3.className = 'message';
+                msgReport.textContent = '';
+                msgReport.className = 'message';
+                inputUser.value = '';
+                inputPass.value = '';
+                inputDesc.value = '';
+                inputAmount.value = '';
+                expenseList.innerHTML = '';
+                totalDisplay.textContent = '$0';
+                btnNextLevel2.disabled = true;
+                reflexCircle.className = 'reflex-circle';
+                reflexInstruction.textContent = 'Espera el cambio de color... (no toques antes)';
+                btnRetryReflex.style.display = 'none';
+                reportContent.classList.remove('visible');
+                reportContent.textContent = '';
+                btnCopyReport.style.display = 'none';
+                btnGenerateReport.classList.remove('ready');
+                btnGenerateReport.disabled = true;
+
+                updateTimerDisplay();
+                timerDisplay.classList.remove('warning', 'danger');
+                timerBar.style.display = 'flex';
+                showScreen('level1');
+                startTimer();
+            }
+
+            // ========== NIVEL 1: LÓGICA DE LOGIN CON BOOLEANOS ==========
+            /**
+             * Valida usuario y contraseña usando comparación booleana estricta.
+             * usuario debe ser exactamente 'admin' Y contraseña '1234'.
+             */
+            btnLogin.addEventListener('click', () => {
+                if (!gameActive) return;
+                const user = inputUser.value.trim();
+                const pass = inputPass.value;
+
+                // Lógica booleana: ambas condiciones deben ser true
+                const isValidUser = (user === 'admin');
+                const isValidPass = (pass === '1234');
+                const loginSuccess = isValidUser && isValidPass;
+
+                if (loginSuccess) {
+                    level1Passed = true;
+                    msgLevel1.textContent = '✅ Credenciales correctas. ¡Nivel 1 superado!';
+                    msgLevel1.className = 'message success';
+                    // Transición al nivel 2
+                    setTimeout(() => {
+                        showScreen('level2');
+                        msgLevel1.textContent = '';
+                        msgLevel1.className = 'message';
+                    }, 600);
+                } else {
+                    msgLevel1.textContent = '❌ Usuario o contraseña incorrectos. Intenta de nuevo.';
+                    msgLevel1.className = 'message error';
+                    inputPass.value = '';
+                }
+            });
+
+            // ========== NIVEL 2: PRESUPUESTO ==========
+            /**
+             * Agrega un gasto a la lista. Valida que no exceda el máximo de 3 elementos.
+             * Actualiza el total y verifica si se cumple la condición para habilitar "Siguiente".
+             */
+            function renderExpenses() {
+                expenseList.innerHTML = '';
+                let total = 0;
+                expenses.forEach((exp, index) => {
+                    total += exp.amount;
+                    const li = document.createElement('li');
+                    li.className = 'expense-item';
+                    li.innerHTML = `
+                        <span class="desc">${escapeHTML(exp.desc) || 'Sin concepto'}</span>
+                        <span class="amount">$${exp.amount.toLocaleString()}</span>
+                        <button class="btn-delete" data-index="${index}" aria-label="Eliminar gasto">✕</button>
+                    `;
+                    expenseList.appendChild(li);
+                });
+                totalDisplay.textContent = `$${total.toLocaleString()}`;
+
+                // Event listeners para botones de eliminar
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = parseInt(e.target.getAttribute('data-index'), 10);
+                        expenses.splice(idx, 1);
+                        renderExpenses();
+                        checkLevel2Condition();
+                    });
+                });
+
+                return total;
+            }
+
+            function checkLevel2Condition() {
+                const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const countOk = expenses.length <= MAX_EXPENSES;
+                const totalOk = total >= BUDGET_MIN && total <= BUDGET_MAX;
+                // El botón se habilita solo si ambas condiciones booleanas son true
+                btnNextLevel2.disabled = !(countOk && totalOk && expenses.length > 0);
+            }
+
+            btnAddExpense.addEventListener('click', () => {
+                if (!gameActive) return;
+                const desc = inputDesc.value.trim();
+                const amountRaw = inputAmount.value.trim();
+                const amount = parseInt(amountRaw, 10);
+
+                // Validaciones
+                if (!desc) {
+                    msgLevel2.textContent = '⚠️ Ingresa un concepto para el gasto.';
+                    msgLevel2.className = 'message error';
+                    return;
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    msgLevel2.textContent = '⚠️ El monto debe ser un número positivo.';
+                    msgLevel2.className = 'message error';
+                    return;
+                }
+                if (expenses.length >= MAX_EXPENSES) {
+                    msgLevel2.textContent = `⚠️ Máximo ${MAX_EXPENSES} elementos permitidos. Elimina uno para agregar otro.`;
+                    msgLevel2.className = 'message error';
+                    return;
+                }
+
+                // Agregar gasto
+                expenses.push({ desc, amount });
+                inputDesc.value = '';
+                inputAmount.value = '';
+                msgLevel2.textContent = '';
+                msgLevel2.className = 'message';
+                renderExpenses();
+                checkLevel2Condition();
+            });
+
+            btnNextLevel2.addEventListener('click', () => {
+                if (!gameActive) return;
+                if (!btnNextLevel2.disabled) {
+                    level2Passed = true;
+                    msgLevel2.textContent = '✅ Presupuesto válido. ¡Nivel 2 superado!';
+                    msgLevel2.className = 'message success';
+                    setTimeout(() => {
+                        showScreen('level3');
+                        msgLevel2.textContent = '';
+                        msgLevel2.className = 'message';
+                        initReflexLevel();
+                    }, 500);
+                }
+            });
+
+            // ========== NIVEL 3: REFLEJOS ==========
+            /**
+             * Máquina de estados del círculo:
+             * - idle: círculo rojo, sin timeout activo. Se inicia automáticamente.
+             * - waiting: se ha programado un timeout aleatorio (1.5-3.5s) para cambiar a verde.
+             * - green: el círculo se puso verde, se registra el timestamp. El usuario debe tocar en <500ms.
+             * - success: el usuario tocó a tiempo. Nivel superado.
+             * - failed: el usuario tocó antes del cambio, o después de 500ms, o no tocó.
+             */
+            function initReflexLevel() {
+                if (!gameActive) return;
+                // Limpiar estado previo
+                if (reflexTimeout) clearTimeout(reflexTimeout);
+                reflexState = 'idle';
+                greenTimestamp = null;
+                reflexCircle.className = 'reflex-circle';
+                reflexInstruction.textContent = 'Espera el cambio de color... (no toques antes)';
+                msgLevel3.textContent = '';
+                msgLevel3.className = 'message';
+                btnRetryReflex.style.display = 'none';
+                scheduleGreenLight();
+            }
+
+            function scheduleGreenLight() {
+                if (!gameActive || reflexState === 'success') return;
+                reflexState = 'waiting';
+                reflexCircle.classList.remove('green');
+                reflexCircle.classList.add('waiting'); // amarillo = esperando programación
+                reflexInstruction.textContent = 'Prepárate... el círculo se pondrá verde pronto.';
+
+                const delay = 1500 + Math.floor(Math.random() * 2500); // entre 1.5 y 4 segundos
+                reflexTimeout = setTimeout(() => {
+                    if (!gameActive) return;
+                    // Cambiar a verde
+                    reflexState = 'green';
+                    greenTimestamp = Date.now();
+                    reflexCircle.classList.remove('waiting');
+                    reflexCircle.classList.add('green');
+                    reflexInstruction.textContent = '¡TÓCALO YA! (menos de 0.5s)';
+                    // Si no toca en 500ms, falla automáticamente
+                    reflexTimeout = setTimeout(() => {
+                        if (reflexState === 'green') {
+                            // No tocó a tiempo
+                            reflexFailed('⏰ Demasiado lento. No tocaste a tiempo.');
+                        }
+                    }, REFLEX_MAX_MS);
+                }, delay);
+            }
+
+            function reflexFailed(reason) {
+                if (reflexState === 'success') return;
+                if (reflexTimeout) clearTimeout(reflexTimeout);
+                reflexState = 'failed';
+                reflexCircle.classList.remove('green', 'waiting');
+                reflexCircle.className = 'reflex-circle'; // rojo
+                reflexInstruction.textContent = reason;
+                msgLevel3.textContent = '❌ Fallaste. Intenta de nuevo.';
+                msgLevel3.className = 'message error';
+                btnRetryReflex.style.display = 'block';
+            }
+
+            function reflexSuccess() {
+                if (reflexTimeout) clearTimeout(reflexTimeout);
+                reflexState = 'success';
+                level3Passed = true;
+                reflexCircle.classList.remove('green', 'waiting');
+                reflexCircle.style.background = '#0f9d58'; // verde fijo
+                reflexInstruction.textContent = '🎉 ¡Reflejos increíbles! Nivel 3 superado.';
+                msgLevel3.textContent = '✅ Tocaste a tiempo. ¡Nivel 3 superado!';
+                msgLevel3.className = 'message success';
+                btnRetryReflex.style.display = 'none';
+                // Transición automática al informe después de 1.2 segundos
+                setTimeout(() => {
+                    showScreen('report');
+                    updateReportButtonState();
+                }, 1200);
+            }
+
+            // Evento de toque en el círculo
+            reflexCircle.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!gameActive) return;
+                if (reflexState === 'success') return;
+
+                if (reflexState === 'green') {
+                    const reactionTime = Date.now() - greenTimestamp;
+                    if (reactionTime <= REFLEX_MAX_MS) {
+                        reflexSuccess();
+                    } else {
+                        reflexFailed(`⏰ Reaccionaste en ${reactionTime}ms, más de ${REFLEX_MAX_MS}ms permitidos.`);
+                    }
+                } else if (reflexState === 'waiting' || reflexState === 'idle') {
+                    // Tocó antes de tiempo
+                    if (reflexTimeout) clearTimeout(reflexTimeout);
+                    reflexFailed('⚠️ Tocaste antes de que se pusiera verde. ¡Espera el cambio!');
+                } else if (reflexState === 'failed') {
+                    // Ya falló, no hacer nada extra
+                }
+            });
+
+            // Botón reintentar nivel 3
+            btnRetryReflex.addEventListener('click', () => {
+                if (!gameActive) return;
+                initReflexLevel();
+            });
+
+            // ========== INFORME FINAL ==========
+            /**
+             * Actualiza el estado del botón "Generar Informe".
+             * Si los 3 niveles fueron superados (3 booleanos true), se pone verde brillante.
+             */
+            function updateReportButtonState() {
+                const allPassed = level1Passed && level2Passed && level3Passed;
+                if (allPassed) {
+                    btnGenerateReport.classList.add('ready');
+                    btnGenerateReport.disabled = false;
+                } else {
+                    btnGenerateReport.classList.remove('ready');
+                    btnGenerateReport.disabled = true;
+                }
+            }
+
+            btnGenerateReport.addEventListener('click', () => {
+                if (!level1Passed || !level2Passed || !level3Passed) return;
+                const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
+                const expenseDetails = expenses.map((e, i) =>
+                    `  ${i+1}. ${e.desc}: $${e.amount.toLocaleString()}`
+                ).join('\n');
+
+                const reportText = `
+        ═══════════════════════════
+         📋 INFORME FINAL DEL SIMULADOR
+        ═══════════════════════════
+         ⏱️ Tiempo restante: ${timeLeft} segundos
+        
+         📌 Estado de niveles:
+           Nivel 1 (Login):      ${level1Passed ? '✅ SUPERADO' : '❌ No superado'}
+           Nivel 2 (Presupuesto):${level2Passed ? '✅ SUPERADO' : '❌ No superado'}
+           Nivel 3 (Reflejos):   ${level3Passed ? '✅ SUPERADO' : '❌ No superado'}
+        
+         💰 Resumen de presupuesto:
+           Total gastado: $${totalExpense.toLocaleString()}
+           Elementos: ${expenses.length} de ${MAX_EXPENSES} permitidos
+           Rango requerido: $${BUDGET_MIN.toLocaleString()} - $${BUDGET_MAX.toLocaleString()}
+           Detalle:
+        ${expenseDetails || '   (sin gastos registrados)'}
+        ═══════════════════════════
+         ${level1Passed && level2Passed && level3Passed ? '🏆 ¡Todos los niveles superados con éxito!' : '⚠️ No se completaron todos los niveles.'}
+        ═══════════════════════════
+                `.trim();
+
+                reportContent.textContent = reportText;
+                reportContent.classList.add('visible');
+                btnCopyReport.style.display = 'block';
+                msgReport.textContent = '';
+                msgReport.className = 'message';
+            });
+
+            // Copiar informe al portapapeles usando la API nativa
+            btnCopyReport.addEventListener('click', async () => {
+                const text = reportContent.textContent;
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    msgReport.textContent = '📋 Informe copiado al portapapeles. ¡Pégalo en tu bloc de notas!';
+                    msgReport.className = 'message success';
+                } catch (err) {
+                    // Fallback para navegadores sin permisos
+                    msgReport.textContent = '⚠️ No se pudo copiar automáticamente. Selecciona el texto y cópialo manualmente.';
+                    msgReport.className = 'message error';
+                    console.error('Error al copiar:', err);
+                }
+            });
+
+            // Reiniciar desde informe
+            btnRestartFromReport.addEventListener('click', restartGame);
+            btnRestartTimeout.addEventListener('click', restartGame);
+
+            // ========== UTILIDADES ==========
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ========== INICIALIZACIÓN ==========
+            /**
+             * Al cargar la página, se muestra el Nivel 1 y se inicia el temporizador global.
+             * La variable global timeLeft comienza en 60 y se decrementa cada segundo.
+             */
+            function initApp() {
+                showScreen('level1');
+                updateTimerDisplay();
+                timerDisplay.classList.remove('warning', 'danger');
+                timerBar.style.display = 'flex';
+                updateReportButtonState();
+                startTimer();
+            }
+
+            // Arrancar la aplicación
+            initApp();
+
+            // Log para desarrolladores
+            console.log('🧠 Simulador educativo inicializado.');
+            console.log('📌 Transición de estados: level1 -> level2 -> level3 -> report');
+            console.log('⏱️ Variable global timeLeft inicializada en 60 segundos.');
+            console.log('🔐 Nivel 1: validación booleana (user === "admin" && pass === "1234")');
+            console.log('💰 Nivel 2: condición (gastos.length <= 3 && total >= 3000 && total <= 3500)');
+            console.log('⚡ Nivel 3: tiempo de reacción < 500ms desde cambio a verde');
+        })();
+    </script>
+</body>
+</html>
